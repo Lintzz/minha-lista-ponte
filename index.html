@@ -3,12 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <title>Autenticando...</title>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
 </head>
 <body>
     <p>Aguarde um momento, estamos redirecionando você de volta ao aplicativo...</p>
-    <script>
+
+    <script type="module">
+        // Importa as funções diretamente, como nos seus outros arquivos
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, getRedirectResult, GoogleAuthProvider, signInWithRedirect } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
         // SUBSTITUA COM A SUA CONFIGURAÇÃO EXATA DO FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyDTdAqCIi3YsvrJUo958ZHLBj9OD2MjKR8",
@@ -19,20 +24,21 @@
             appId: "1:954288998094:web:80ce2579d95670c023f29f"
         };
 
-        const app = firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
 
-        auth.getRedirectResult()
+        getRedirectResult(auth)
             .then((result) => {
-                if (result.credential) {
-                    // Pega o ID Token, que é o que precisamos
-                    const idToken = result.credential.idToken;
+                if (result) {
+                    // Pega o ID Token que é o que precisamos
+                    const credential = GoogleAuthProvider.credentialFromResult(result);
+                    const idToken = credential.idToken;
                     // Redireciona para o deep link do seu app com o token
                     window.location.href = `minha-lista://callback?idToken=${idToken}`;
                 } else {
                     // Se não houver resultado (primeiro acesso), inicia o login
-                    const provider = new firebase.auth.GoogleAuthProvider();
-                    auth.signInWithRedirect(provider);
+                    const provider = new GoogleAuthProvider();
+                    signInWithRedirect(auth, provider);
                 }
             })
             .catch((error) => {
