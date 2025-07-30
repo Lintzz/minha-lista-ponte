@@ -1,12 +1,25 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Autenticando...</title>
+    <title>Autenticação - Minha Lista</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background-color: #121212; color: #E0E0E0; text-align: center; }
+        .container { max-width: 400px; padding: 20px; }
+        #login-button { font-size: 1.1em; font-weight: bold; padding: 12px 24px; border: none; border-radius: 8px; color: white; background-color: #4285F4; cursor: pointer; transition: opacity 0.2s; }
+        #login-button:hover { opacity: 0.9; }
+        #status-message { font-size: 1.1em; line-height: 1.5; }
+    </style>
 </head>
 <body>
-    <p id="status-message">Por favor, complete o login na janela pop-up.</p>
-    <button id="login-button" style="display: none;">Tentar Login Novamente</button>
+    <div class="container">
+        <h1 id="title">Conectar ao Minha Lista</h1>
+        <p id="status-message">Clique no botão abaixo para fazer login com sua conta Google e retornar ao aplicativo.</p>
+        <button id="login-button">
+            <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" style="width: 20px; vertical-align: middle; margin-right: 10px;">
+            <span>Fazer Login com Google</span>
+        </button>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -25,12 +38,16 @@
         const auth = getAuth(app);
         const statusMessage = document.getElementById('status-message');
         const loginButton = document.getElementById('login-button');
+        const title = document.getElementById('title');
 
         async function startLogin() {
             try {
+                // Esconde o botão e atualiza a mensagem
+                loginButton.style.display = 'none';
+                title.textContent = 'Autenticando...';
+                statusMessage.textContent = "Por favor, complete o login na janela pop-up.";
+
                 const provider = new GoogleAuthProvider();
-                
-                // Usa o signInWithPopup, que é mais direto
                 const result = await signInWithPopup(auth, provider);
                 
                 statusMessage.textContent = "Sucesso! Redirecionando de volta para o aplicativo...";
@@ -38,7 +55,6 @@
                 const credential = GoogleAuthProvider.credentialFromResult(result);
                 if (credential) {
                     const idToken = credential.idToken;
-                    // Redireciona para o deep link do seu app com o token
                     window.location.href = `minha-lista://callback?idToken=${idToken}`;
                 } else {
                     throw new Error("Não foi possível extrair a credencial do resultado.");
@@ -46,22 +62,17 @@
 
             } catch (error) {
                 console.error("Erro no processo de autenticação:", error);
-                
-                // Se o usuário fechar o pop-up, o erro é 'auth/popup-closed-by-user'
+                title.textContent = 'Ocorreu um Erro';
                 if (error.code === 'auth/popup-closed-by-user') {
                     statusMessage.textContent = "A janela de login foi fechada. Você pode fechar esta aba ou tentar novamente.";
                 } else {
-                    statusMessage.innerHTML = `<p>Ocorreu um erro: ${error.message}</p>`;
+                    statusMessage.innerHTML = `<p>Erro: ${error.message}</p>`;
                 }
-                
-                loginButton.style.display = 'block'; // Mostra o botão para tentar de novo
+                loginButton.style.display = 'block';
             }
         }
 
         loginButton.addEventListener('click', startLogin);
-
-        // Inicia o processo de login assim que a página carrega
-        startLogin();
     </script>
 </body>
 </html>
