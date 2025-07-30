@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <title>Autenticando...</title>
-    </head>
+</head>
 <body>
-    <p id="status-message">Aguarde um momento, estamos processando sua autenticação...</p>
+    <p id="status-message">Por favor, complete o login na janela pop-up.</p>
+    <button id="login-button" style="display: none;">Tentar Login Novamente</button>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        // Importa as novas funções de persistência
-        import { getAuth, getRedirectResult, GoogleAuthProvider, signInWithRedirect, browserLocalPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDTdAqCIi3YsvrJUo958ZHLBj9OD2MjKR8",
@@ -24,45 +24,44 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const statusMessage = document.getElementById('status-message');
+        const loginButton = document.getElementById('login-button');
 
-        // Função principal assíncrona para lidar com o login
-        async function handleAuth() {
+        async function startLogin() {
             try {
-                // Define a persistência para ser mais robusta
-                await setPersistence(auth, browserLocalPersistence);
-                console.log("Persistência definida. Verificando resultado do redirecionamento...");
-
-                const result = await getRedirectResult(auth);
-                console.log("Resultado do getRedirectResult:", result);
-
-                if (result) {
-                    console.log("Resultado encontrado!", result);
-                    statusMessage.textContent = "Sucesso! Redirecionando de volta para o aplicativo...";
-                    
-                    const credential = GoogleAuthProvider.credentialFromResult(result);
-                    if (credential) {
-                        const idToken = credential.idToken;
-                        console.log("idToken extraído. Redirecionando para o deep link...");
-                        window.location.href = `minha-lista://callback?idToken=${idToken}`;
-                    } else {
-                         throw new Error("Não foi possível extrair a credencial do resultado.");
-                    }
-                    
+                const provider = new GoogleAuthProvider();
+                
+                // Usa o signInWithPopup, que é mais direto
+                const result = await signInWithPopup(auth, provider);
+                
+                statusMessage.textContent = "Sucesso! Redirecionando de volta para o aplicativo...";
+                
+                const credential = GoogleAuthProvider.credentialFromResult(result);
+                if (credential) {
+                    const idToken = credential.idToken;
+                    // Redireciona para o deep link do seu app com o token
+                    window.location.href = `minha-lista://callback?idToken=${idToken}`;
                 } else {
-                    console.log("Nenhum resultado de redirecionamento encontrado. Iniciando o login...");
-                    statusMessage.textContent = "Você será redirecionado para a página de login do Google.";
-                    
-                    const provider = new GoogleAuthProvider();
-                    await signInWithRedirect(auth, provider);
+                    throw new Error("Não foi possível extrair a credencial do resultado.");
                 }
+
             } catch (error) {
                 console.error("Erro no processo de autenticação:", error);
-                statusMessage.innerHTML = `<p>Ocorreu um erro. Por favor, feche esta janela e tente novamente.</p><p>Erro: ${error.code} - ${error.message}</p>`;
+                
+                // Se o usuário fechar o pop-up, o erro é 'auth/popup-closed-by-user'
+                if (error.code === 'auth/popup-closed-by-user') {
+                    statusMessage.textContent = "A janela de login foi fechada. Você pode fechar esta aba ou tentar novamente.";
+                } else {
+                    statusMessage.innerHTML = `<p>Ocorreu um erro: ${error.message}</p>`;
+                }
+                
+                loginButton.style.display = 'block'; // Mostra o botão para tentar de novo
             }
         }
 
-        // Inicia o processo
-        handleAuth();
+        loginButton.addEventListener('click', startLogin);
+
+        // Inicia o processo de login assim que a página carrega
+        startLogin();
     </script>
 </body>
 </html>
