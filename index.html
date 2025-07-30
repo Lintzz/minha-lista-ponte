@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Autenticando...</title>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
+</head>
+<body>
+    <p>Aguarde um momento, estamos redirecionando você de volta ao aplicativo...</p>
+    <script>
+        // SUBSTITUA COM A SUA CONFIGURAÇÃO EXATA DO FIREBASE
+        const firebaseConfig = {
+            apiKey: "AIzaSyDTdAqCIi3YsvrJUo958ZHLBj9OD2MjKR8",
+            authDomain: "minha-lista-desktop.firebaseapp.com",
+            projectId: "minha-lista-desktop",
+            storageBucket: "minha-lista-desktop.firebasestorage.app",
+            messagingSenderId: "954288998094",
+            appId: "1:954288998094:web:80ce2579d95670c023f29f"
+        };
+
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+
+        auth.getRedirectResult()
+            .then((result) => {
+                if (result.credential) {
+                    // Pega o ID Token, que é o que precisamos
+                    const idToken = result.credential.idToken;
+                    // Redireciona para o deep link do seu app com o token
+                    window.location.href = `minha-lista://callback?idToken=${idToken}`;
+                } else {
+                    // Se não houver resultado (primeiro acesso), inicia o login
+                    const provider = new firebase.auth.GoogleAuthProvider();
+                    auth.signInWithRedirect(provider);
+                }
+            })
+            .catch((error) => {
+                console.error(error);
+                document.body.innerHTML = `<p>Ocorreu um erro. Por favor, feche esta janela e tente novamente.</p><p>Erro: ${error.message}</p>`;
+            });
+    </script>
+</body>
+</html>
