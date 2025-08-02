@@ -48,6 +48,11 @@
                 statusMessage.textContent = "Por favor, complete o login na janela pop-up.";
 
                 const provider = new GoogleAuthProvider();
+
+                provider.setCustomParameters({
+                    prompt: 'select_account'
+                })
+
                 const result = await signInWithPopup(auth, provider);
                 
                 statusMessage.textContent = "Sucesso! Redirecionando de volta para o aplicativo...";
